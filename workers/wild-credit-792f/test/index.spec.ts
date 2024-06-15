@@ -22,4 +22,8 @@ describe('Hello World worker', () => {
 		const response = await SELF.fetch('https://example.com');
 		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
 	});
+
+	it('fails', async () => {
+		expect(4).toEqual(6);
+	});
 });
