@@ -4,7 +4,7 @@
   "description": "Fleure is a marketplace to help people smoothly transition between different stages of life.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "install:prereqs": "for d in workers/*; do (cd \"$d\" && npm ci); done",
     "test:workers": "for d in workers/*; do (cd \"$d\" && npm test); done"
   },
   "author": "",
