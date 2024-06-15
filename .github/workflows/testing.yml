@@ -23,4 +23,5 @@ jobs:
     - uses: actions/checkout@v4
     - run: npm ci
     - run: npm install -g vitest
+    - run: npm install @cloudflare/vitest-pool-workers
     - run: npm run test:workers
