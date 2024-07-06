@@ -5,6 +5,10 @@ import {
 } from "@cloudflare/itty-router-openapi";
 
 export class GetUserById extends OpenAPIRoute {
+	constructor() {
+		super(null);
+	}
+
 	static schema: OpenAPIRouteSchema = {
 		tags: ["User"],
 		summary: "Get a user by ID",
@@ -33,11 +37,11 @@ export class GetUserById extends OpenAPIRoute {
 				},
 			},
 			"500": {
-			  description: "Internal Server Error",
-			  schema: {
-				success: Boolean,
-				error: String,
-			  },
+				description: "Internal Server Error",
+				schema: {
+					success: Boolean,
+					error: String,
+				},
 			},
 		},
 	};

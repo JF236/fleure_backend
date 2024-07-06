@@ -34,6 +34,7 @@ bower_components
 
 # node-waf configuration
 .lock-wscript
+.config.json
 
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
@@ -132,3 +133,4 @@ dist
 # Mac customizer
 .DS_Store
 **/.DS_Store
+

@@ -7,4 +7,5 @@ compatibility_date = "2024-06-20"
 [[d1_databases]]
 binding = "DB"
 database_name = "fleure-database"
-database_id = "63352428-9020-4595-844c-e256b2a66cac"
+database_id = ""
+
