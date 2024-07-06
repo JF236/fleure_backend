@@ -134,3 +134,4 @@ dist
 .DS_Store
 **/.DS_Store
 
+workers/**/wrangler.toml
