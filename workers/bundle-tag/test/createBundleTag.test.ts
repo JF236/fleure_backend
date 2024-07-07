@@ -87,7 +87,7 @@ describe("CreateBundleTag", () => {
     expect(response.status).toBe(500);
     expect(result).toEqual({
       success: false,
-      error: "Error: Error: Database error",
+      error: "Error: Database error",
     });
   });
 });

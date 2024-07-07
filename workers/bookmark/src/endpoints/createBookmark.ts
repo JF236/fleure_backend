@@ -64,7 +64,7 @@ export class CreateBookmark extends OpenAPIRoute {
 		  return new Response(
 			JSON.stringify({
 			  success: false,
-			  error: error,
+			  error: String(error),
 			}),
 			{ status: 500, headers: { "Content-Type": "application/json" } }
 		  );
