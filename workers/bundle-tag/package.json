@@ -6,7 +6,7 @@
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
 		"start": "wrangler dev",
-		"test": "npx jest",
+		"test": "npx jest test/*.test.ts",
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
@@ -14,8 +14,10 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20240620.0",
+		"@types/jest": "^29.5.12",
 		"@types/node": "20.8.3",
 		"@types/service-worker-mock": "^2.0.1",
+		"ts-jest": "^29.1.5",
 		"wrangler": "^3.60.3"
 	}
 }
