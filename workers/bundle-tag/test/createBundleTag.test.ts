@@ -1,4 +1,4 @@
-import { CreateBookmark } from "../src/endpoints/createBookmark";
+import { CreateBundleTag } from "../src/endpoints/createBundleTag";
 
 
 const env = {
@@ -30,7 +30,7 @@ class MockRequest {
   }
 }
 
-describe("CreateBookmark", () => {
+describe("CreateBundleTag", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -40,26 +40,26 @@ describe("CreateBookmark", () => {
     const request = new MockRequest("http://localhost", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 1, bundle_id: 1 }),
+      body: JSON.stringify({ bundle_id: 1, tag_id: 1 }),
     });
 
     const data = {
       params: {
-        user_id: 1,
         bundle_id: 1,
+        tag_id: 1,
       },
     };
 
     env.DB.prepare().run.mockResolvedValueOnce({});
 
-    const createBookmark = new CreateBookmark();
-    const response = await createBookmark.handle(request as any, env, context, data);
+    const createBundleTag = new CreateBundleTag();
+    const response = await createBundleTag.handle(request as any, env, context, data);
     const result = await response.json();
 
     expect(response.status).toBe(200);
     expect(result).toEqual({
       success: true,
-      result: "Bookmark Inserted",
+      result: "Bundle-Tag Inserted",
     });
   });
 
@@ -68,20 +68,20 @@ describe("CreateBookmark", () => {
     const request = new MockRequest("http://localhost", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: 1, bundle_id: 1 }),
+      body: JSON.stringify({ bundle_id: 1, tag_id: 1 }),
     });
 
     const data = {
       params: {
-        user_id: 1,
         bundle_id: 1,
+        tag_id: 1,
       },
     };
 
     env.DB.prepare().run.mockRejectedValueOnce(new Error("Database error"));
 
-    const createBookmark = new CreateBookmark();
-    const response = await createBookmark.handle(request as any, env, context, data);
+    const createBundleTag = new CreateBundleTag();
+    const response = await createBundleTag.handle(request as any, env, context, data);
     const result = await response.json();
 
     expect(response.status).toBe(500);

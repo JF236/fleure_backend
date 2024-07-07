@@ -4,25 +4,32 @@ import {
 	Path,
 } from "@cloudflare/itty-router-openapi";
 
-export class CreateBookmark extends OpenAPIRoute {
+export class CreateBundleTag extends OpenAPIRoute {
 	constructor() {
 		super(null);
 	}
 
 	static schema: OpenAPIRouteSchema = {
-		tags: ["Bookmark"],
-		summary: "Create a bookmark",
+		tags: ["Bundle-Tag"],
+		summary: "Create a bundle-tag",
 		parameters: {
-			user_id: Path(Number, {
-				description: "User ID",
-			}),
 			bundle_id: Path(Number, {
 				description: "Bundle ID",
+			}),
+			tag_id: Path(Number, {
+				description: "Tag ID",
 			}),
 		},
 		responses: {
 			"200": {
-				description: "Returns if the bookmark was added successfully",
+				description: "Returns if the bundle-tag was added successfully",
+				schema: {
+					success: Boolean,
+                    result: String,
+				},
+			},
+			"409": {
+				description: "Conflict Error",
 				schema: {
 					success: Boolean,
                     result: String,
@@ -45,29 +52,29 @@ export class CreateBookmark extends OpenAPIRoute {
 		data: Record<string, any>
 	) {
 
-		const { user_id, bundle_id } = data.params;
+		const { bundle_id, tag_id } = data.params;
 	
 		try {
-		  const userQuery = await env.DB.prepare("INSERT INTO bookmarks (user_id, bundle_id) VALUES (?, ?)")
-            .bind(user_id, bundle_id);
+		  const userQuery = await env.DB.prepare("INSERT INTO bundle_tags (bundle_id, tag_id) VALUES (?, ?)")
+            .bind(bundle_id, tag_id);
           const result = await userQuery.run();
 	
 		  return new Response(
 			JSON.stringify({
 			  success: true,
-			  result: "Bookmark Inserted",
+			  result: "Bundle-Tag Inserted",
 			}),
 			{ status: 200, headers: { "Content-Type": "application/json" } }
 		  );
 
 		} catch (error) {
-		  return new Response(
-			JSON.stringify({
-			  success: false,
-			  error: error,
-			}),
-			{ status: 500, headers: { "Content-Type": "application/json" } }
-		  );
+			return new Response(
+				JSON.stringify({
+				success: false,
+				error: error,
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
 		}
 	}
 }
