@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "install:prereqs": "for d in workers/*; do (cd \"$d\" && npm ci); done",
-    "test:workers": "for d in workers/*; do (cd \"$d\" && npm test); done"
+    "test:workers": "for d in workers/*; do echo \"Testing $d...\"; (cd \"$d\" && npm test); done"
   },
   "author": "",
   "license": "ISC"

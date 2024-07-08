@@ -55,7 +55,7 @@ export class CreateMessage extends OpenAPIRoute {
 			const userQuery = await env.DB.prepare("INSERT INTO messages (bundle_id, buyer_id) VALUES (?, ?)")
 			  .bind(bundle_id, buyer_id);
 			await userQuery.run();
-			const result = await env.DB.prepare("SELECT id FROM messages WHERE bundle_id = ? AND buyer_id = ?")
+			const result = await env.DB.prepare("SELECT id FROM messages WHERE bundle_id = ? AND buyer_id = ? ORDER BY id desc")
 			  .bind(bundle_id, buyer_id)
 			  .first();
 
