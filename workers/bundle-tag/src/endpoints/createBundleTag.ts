@@ -28,13 +28,6 @@ export class CreateBundleTag extends OpenAPIRoute {
                     result: String,
 				},
 			},
-			"409": {
-				description: "Conflict Error",
-				schema: {
-					success: Boolean,
-                    result: String,
-				},
-			},
 			"500": {
 				description: "Internal Server Error",
 				schema: {
