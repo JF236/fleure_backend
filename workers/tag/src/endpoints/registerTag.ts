@@ -52,7 +52,7 @@ export class RegisterTag extends OpenAPIRoute {
 			const userQuery = await env.DB.prepare("INSERT INTO tags (tag_name) VALUES (?)")
 			  .bind(tag_name);
 			await userQuery.run();
-			const result = await env.DB.prepare("SELECT id FROM tags WHERE tag_name = ?")
+			const result = await env.DB.prepare("SELECT id FROM tags WHERE tag_name = ? ORDER BY id desc")
 			  .bind(tag_name)
 			  .first();
 

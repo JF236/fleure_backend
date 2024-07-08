@@ -3,7 +3,8 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users 
     (id INTEGER PRIMARY KEY, 
     username TEXT NOT NULL, 
-    email TEXT NOT NULL);
+    email TEXT NOT NULL,
+    password TEXT NOT NULL);
 
 DROP TABLE IF EXISTS bundles;
 CREATE TABLE IF NOT EXISTS bundles 
@@ -22,10 +23,19 @@ DROP TABLE IF EXISTS categories;
 CREATE TABLE IF NOT EXISTS categories 
     (id INTEGER PRIMARY KEY, 
     category_name TEXT NOT NULL);
+INSERT INTO categories (id, category_name) VALUES 
+    (1, 'University'),
+    (2, 'Other');
+
 DROP TABLE IF EXISTS states;
 CREATE TABLE IF NOT EXISTS states 
     (id INTEGER PRIMARY KEY, 
     state_name TEXT NOT NULL);
+INSERT INTO states (id, state_name) VALUES 
+    (0, 'test'),
+    (1, 'create'),
+    (2, 'upload'),
+    (3, 'delete');
 
 DROP TABLE IF EXISTS items;
 CREATE TABLE IF NOT EXISTS items 
