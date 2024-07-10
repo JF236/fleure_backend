@@ -49,7 +49,6 @@ export class CreateUser extends OpenAPIRoute {
 	) {
 
 		const { username, email, password } = data.params;
-        console.log("email: " + email);
 
         var check = await env.DB.prepare("SELECT * FROM users WHERE username = ?")
             .bind(username)
