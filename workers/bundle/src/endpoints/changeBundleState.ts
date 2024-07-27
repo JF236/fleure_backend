@@ -1,80 +1,73 @@
-import { Bool, OpenAPIRoute, Str } from "chanfana";
-import { z } from "zod";
+import {
+	OpenAPIRoute,
+	OpenAPIRouteSchema,
+	Path,
+} from "@cloudflare/itty-router-openapi";
 
 export class ChangeBundleState extends OpenAPIRoute {
-	schema = {
-		tags: ["Tasks"],
-		summary: "Get a single Task by slug",
-		request: {
-			params: z.object({
-				taskSlug: Str({ description: "Task slug" }),
+	constructor() {
+		super(null);
+	}
+
+	static schema: OpenAPIRouteSchema = {
+		tags: ["Bundle"],
+		summary: "Change Bundle State",
+		parameters: {
+			id: Path(Number, {
+				description: "Bundle ID",
+			}),
+			state_id: Path(Number, {
+				description: "Bundle State",
 			}),
 		},
 		responses: {
 			"200": {
-				description: "Returns a single task if found",
-				content: {
-					"application/json": {
-						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								result: z.object({
-									task: Task,
-								}),
-							}),
-						}),
-					},
+				description: "Bundle state was updated (if id exists)",
+				schema: {
+					success: Boolean,
+                    result: String,
 				},
 			},
-			"404": {
-				description: "Task not found",
-				content: {
-					"application/json": {
-						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								error: Str(),
-							}),
-						}),
-					},
+			"500": {
+				description: "Internal Server Error",
+				schema: {
+					success: Boolean,
+                    result: String,
 				},
 			},
 		},
 	};
 
-	async handle(c) {
-		// Get validated data
-		const data = await this.getValidatedData<typeof this.schema>();
+	async handle(
+		request: Request,
+		env: any,
+		context: any,
+		data: Record<string, any>
+	) {
+		const { id, state_id } = data.params;
 
-		// Retrieve the validated slug
-		const { taskSlug } = data.params;
 
-		// Implement your own object fetch here
-
-		const exists = true;
-
-		// @ts-ignore: check if the object exists
-		if (exists === false) {
-			return Response.json(
-				{
-					success: false,
-					error: "Object not found",
-				},
-				{
-					status: 404,
-				},
+		try {
+			const userQuery = env.DB.prepare("UPDATE bundles SET state_id = ? WHERE id = ?")
+			.bind(state_id, id);
+			const result = await userQuery.run();
+	
+			return new Response(
+			JSON.stringify({
+				success: true,
+				result: "Bundle state changed (if ID exists)",
+			}),
+			{ status: 200, headers: { "Content-Type": "application/json" } }
+			);
+	
+		} catch (error) {
+			return new Response(
+				JSON.stringify({
+				success: false,
+				error: String(error),
+				}),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
 		}
-
-		return {
-			success: true,
-			task: {
-				name: "my task",
-				slug: taskSlug,
-				description: "this needs to be done",
-				completed: false,
-				due_date: new Date().toISOString().slice(0, 10),
-			},
-		};
 	}
 }

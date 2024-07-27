@@ -1,69 +1,88 @@
-import { Bool, Num, OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import { Task } from "../types";
+import {
+	OpenAPIRoute,
+	OpenAPIRouteSchema,
+	Path,
+} from "@cloudflare/itty-router-openapi";
 
 export class UpdateBundle extends OpenAPIRoute {
-	schema = {
-		tags: ["Tasks"],
-		summary: "List Tasks",
-		request: {
-			query: z.object({
-				page: Num({
-					description: "Page number",
-					default: 0,
-				}),
-				isCompleted: Bool({
-					description: "Filter by completed flag",
-					required: false,
-				}),
+	constructor() {
+		super(null);
+	}
+	
+	static schema: OpenAPIRouteSchema = {
+		tags: ["Bundle"],
+		summary: "Update Bundle",
+
+		parameters: {
+			id: Path(Number, {
+				description: "Bundle Id",
+			}),
+			bundle_name: Path(String, {
+				description: "Bundle name",
+			}),
+			bundle_desc: Path(String, {
+				description: "Bundle description",
+			}),
+			category_id: Path(String, {
+				description: "Bundle category",
+			}),
+			image_id: Path(String, {
+				description: "Bundle image",
 			}),
 		},
 		responses: {
 			"200": {
-				description: "Returns a list of tasks",
-				content: {
-					"application/json": {
-						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								result: z.object({
-									tasks: Task.array(),
-								}),
-							}),
-						}),
-					},
+				description: "Returns true if successful",
+				schema: {
+					success: Boolean,
+					result: String,
+						
+				},
+			},
+			"409": {
+				description: "Bundle does not exist",
+				schema: {
+					success: Boolean,
+                    error: String,
 				},
 			},
 		},
 	};
 
-	async handle(c) {
-		// Get validated data
-		const data = await this.getValidatedData<typeof this.schema>();
+	
+	async handle(
+		request: Request,
+		env: any,
+		context: any,
+		data: Record<string, any>
+	) {
+		const { id, bundle_name, bundle_desc, category_id, image_id } = data.params;
+	
+		const check = await env.DB.prepare("SELECT * FROM bundles WHERE id = ? ")
+			.bind(id)
+		  .first();
 
-		// Retrieve the validated parameters
-		const { page, isCompleted } = data.query;
+		if (check) {
+			const userQuery = await env.DB.prepare("UPDATE bundles SET bundle_name = ?, bundle_desc = ?, category_id = ?, image_id = ? WHERE id = ?")
+				.bind( bundle_name, bundle_desc, category_id, image_id, id );
+			await userQuery.run();
 
-		// Implement your own object list here
+			return new Response(
+			  JSON.stringify({
+				  success: true,
+				  result: "Bundle updated successfully",
+			  }),
+			  { status: 200, headers: { "Content-Type": "application/json" } }
+		  );
+		}
+		return new Response(
+			JSON.stringify({
+				success: false,
+				error: "Bundle does not exist",
+			}),
+			{ status: 409, headers: { "Content-Type": "application/json" } }
+		);
 
-		return {
-			success: true,
-			tasks: [
-				{
-					name: "Clean my room",
-					slug: "clean-room",
-					description: null,
-					completed: false,
-					due_date: "2025-01-05",
-				},
-				{
-					name: "Build something awesome with Cloudflare Workers",
-					slug: "cloudflare-workers",
-					description: "Lorem Ipsum",
-					completed: true,
-					due_date: "2022-12-24",
-				},
-			],
-		};
 	}
+	
 }

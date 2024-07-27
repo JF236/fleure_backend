@@ -40,7 +40,7 @@ INSERT INTO states (id, state_name) VALUES
 DROP TABLE IF EXISTS items;
 CREATE TABLE IF NOT EXISTS items 
     (id INTEGER PRIMARY KEY, 
-    bundle_id TEXT NOT NULL, 
+    bundle_id INTEGER NOT NULL, 
     item_name TEXT NOT NULL, 
     image_id INTEGER);
     

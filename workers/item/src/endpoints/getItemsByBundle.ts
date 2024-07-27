@@ -55,7 +55,7 @@ export class GetItemsByBundle extends OpenAPIRoute {
 	  	return new Response(
 			JSON.stringify({
 				success: true,
-				result: result,
+				result: result.results,
 			}),
 			{ status: 200, headers: { "Content-Type": "application/json" } }
 		);

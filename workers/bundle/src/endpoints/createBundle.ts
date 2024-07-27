@@ -1,58 +1,88 @@
-import { Bool, OpenAPIRoute } from "chanfana";
-import { z } from "zod";
-import { Task } from "../types";
+import {
+	OpenAPIRoute,
+	OpenAPIRouteSchema,
+	Path,
+} from "@cloudflare/itty-router-openapi";
 
 export class CreateBundle extends OpenAPIRoute {
-	schema = {
-		tags: ["Tasks"],
-		summary: "Create a new Task",
-		request: {
-			body: {
-				content: {
-					"application/json": {
-						schema: Task,
-					},
-				},
-			},
+	constructor() {
+		super(null);
+	}
+	
+	static schema: OpenAPIRouteSchema = {
+		tags: ["Bundle"],
+		summary: "Create a new Bundle",
+
+		parameters: {
+			user_id: Path(Number, {
+				description: "User ID",
+			}),
+			bundle_name: Path(String, {
+				description: "Bundle name",
+			}),
+			bundle_desc: Path(String, {
+				description: "Bundle description",
+			}),
+			category_id: Path(Number, {
+				description: "Category ID",
+			}),
+			bundle_size: Path(Number, {
+				description: "Bundle Size",
+			}),
+			image_id: Path(Number, {
+				description: "Image ID",
+			}),
 		},
 		responses: {
 			"200": {
 				description: "Returns the created task",
-				content: {
-					"application/json": {
-						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								result: z.object({
-									task: Task,
-								}),
-							}),
-						}),
-					},
+				schema: {
+					success: Boolean,
+					result: Number,
+						
+				},
+			},
+			"500": {
+				description: "Internal Server Error",
+				schema: {
+					success: Boolean,
+                    result: String,
 				},
 			},
 		},
 	};
 
-	async handle(c) {
-		// Get validated data
-		const data = await this.getValidatedData<typeof this.schema>();
+	async handle(
+		request: Request,
+		env: any,
+		context: any,
+		data: Record<string, any>
+	)  {
 
 		// Retrieve the validated request body
-		const taskToCreate = data.body;
+		const { user_id, bundle_name, bundle_desc, category_id, bundle_size, image_id } = data.params;
 
-		// Implement your own object insertion here
+		const userQuery = await env.DB.prepare(
+			`INSERT INTO bundles (user_id, bundle_name, 
+			bundle_desc, category_id, state_id, bundle_size, 
+			creation_date, updated_date, image_id) 
+			VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`)
+		  .bind(user_id, bundle_name, bundle_desc, category_id, bundle_size, Date.now(), Date.now(), image_id);
+		await userQuery.run();
 
-		// return the new task
-		return {
+
+		const result = await env.DB.prepare(`SELECT id FROM bundles WHERE user_id = ? AND bundle_name = ? AND bundle_desc = ? 
+			AND state_id = 1 AND bundle_size = ? ORDER BY id desc`)
+		.bind(user_id, bundle_name, bundle_desc, bundle_size )
+		.first();
+
+		return new Response(
+		JSON.stringify({
 			success: true,
-			task: {
-				name: taskToCreate.name,
-				slug: taskToCreate.slug,
-				description: taskToCreate.description,
-				completed: taskToCreate.completed,
-				due_date: taskToCreate.due_date,
-			},
-		};
+			result: result.id,
+		}),
+		{ status: 200, headers: { "Content-Type": "application/json" } }
+		);
+
 	}
 }

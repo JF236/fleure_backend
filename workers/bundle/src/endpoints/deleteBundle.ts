@@ -1,56 +1,74 @@
-import { Bool, OpenAPIRoute, Str } from "chanfana";
-import { z } from "zod";
-import { Task } from "../types";
+import {
+	OpenAPIRoute,
+	OpenAPIRouteSchema,
+	Path,
+} from "@cloudflare/itty-router-openapi";
 
 export class DeleteBundle extends OpenAPIRoute {
-	schema = {
-		tags: ["Tasks"],
-		summary: "Delete a Task",
-		request: {
-			params: z.object({
-				taskSlug: Str({ description: "Task slug" }),
+	constructor() {
+		super(null);
+	}
+	
+	static schema: OpenAPIRouteSchema = {
+		tags: ["Bundle"],
+		summary: "Delete a bundle",
+
+		parameters: {
+			id: Path(Number, {
+				description: "Bundle Id",
 			}),
 		},
 		responses: {
 			"200": {
-				description: "Returns if the task was deleted successfully",
-				content: {
-					"application/json": {
-						schema: z.object({
-							series: z.object({
-								success: Bool(),
-								result: z.object({
-									task: Task,
-								}),
-							}),
-						}),
-					},
+				description: "Returns true on successful deletion",
+				schema: {
+					success: Boolean,
+					result: String,
+						
+				},
+			},
+			"500": {
+				description: "Internal Server Error",
+				schema: {
+					success: Boolean,
+                    result: String,
 				},
 			},
 		},
 	};
 
-	async handle(c) {
-		// Get validated data
-		const data = await this.getValidatedData<typeof this.schema>();
+	async handle(
+		request: Request,
+		env: any,
+		context: any,
+		data: Record<string, any>
+	)  {
 
-		// Retrieve the validated slug
-		const { taskSlug } = data.params;
+		// Retrieve the validated request body
+		const { id } = data.params;
 
-		// Implement your own object deletion here
-
-		// Return the deleted task for confirmation
-		return {
-			result: {
-				task: {
-					name: "Build something awesome with Cloudflare Workers",
-					slug: taskSlug,
-					description: "Lorem Ipsum",
-					completed: true,
-					due_date: "2022-12-24",
-				},
-			},
-			success: true,
-		};
+		// Implement your own object insertion here
+		try {
+			const userQuery = await env.DB.prepare(`DELETE FROM bundles WHERE id = ?`)
+			  .bind(id);
+			const result = await userQuery.run();
+	  
+			return new Response(
+			  JSON.stringify({
+				success: true,
+				result: "Bundle Deleted",
+			  }),
+			  { status: 200, headers: { "Content-Type": "application/json" } }
+			);
+  
+		  } catch (error) {
+			return new Response(
+			  JSON.stringify({
+				success: false,
+				error: String(error),
+			  }),
+			  { status: 500, headers: { "Content-Type": "application/json" } }
+			);
+		  }
 	}
 }
