@@ -8,5 +8,10 @@
     "test:workers": "for d in workers/*; do echo \"Testing $d...\"; (cd \"$d\" && npm test); done"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@cloudflare/itty-router-openapi": "^1.1.1",
+    "chanfana": "^2.0.2",
+    "hono": "^4.5.1"
+  }
 }

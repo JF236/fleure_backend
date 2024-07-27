@@ -1,5 +1,6 @@
 import { GetItemsByBundle } from "../src/endpoints/getItemsByBundle";
 
+// Mock environment variables
 const mockEnv = {
   DB: {
     prepare: jest.fn().mockReturnThis(),
@@ -32,7 +33,7 @@ describe("GetItemsByBundle", () => {
       },
     ];
 
-    mockEnv.DB.all.mockResolvedValueOnce(mockResult);
+    mockEnv.DB.all.mockResolvedValueOnce({ results: mockResult });
 
     const requestData = {
       params: {
@@ -54,7 +55,7 @@ describe("GetItemsByBundle", () => {
       result: mockResult,
     });
 
-    expect(mockEnv.DB.prepare).toHaveBeenCalledTimes(1);
+    expect(mockEnv.DB.prepare).toHaveBeenCalledWith("SELECT * FROM items WHERE bundle_id = ?");
     expect(mockEnv.DB.bind).toHaveBeenCalledWith(123);
     expect(mockEnv.DB.all).toHaveBeenCalled();
   });
