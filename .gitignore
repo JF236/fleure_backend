@@ -135,3 +135,4 @@ dist
 **/.DS_Store
 
 workers/**/wrangler.toml
+workers/**/jest-results.json
