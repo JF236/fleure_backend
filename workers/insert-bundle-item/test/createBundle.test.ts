@@ -1,104 +1,110 @@
-import { CreateBundle } from "../src/endpoints/createBundle";
-import { Item } from "../src/item";
+import { CreateBundle } from '../src/endpoints/createBundle';
+import { Bool } from 'chanfana';
+import { Item } from '../src/item';
+import { routeOptions, responseSchema } from './routeOptions';
 
-// Define the expected response types
-interface SuccessResponse {
-    success: boolean;
-    result: {
-        bundleId: number;
-        items: typeof Item[];
-    };
+interface ResponseData {
+  success: boolean;
+  result: {
+    bundleId: number;
+    items: typeof Item[];
+  };
 }
-
-interface ErrorResponse {
-    success: boolean;
-    result: string;
-}
-
-// Mock the database methods
-const mockDb = {
-    prepare: jest.fn().mockImplementation((query: string) => ({
-        bind: jest.fn().mockReturnThis(),
-        run: jest.fn().mockResolvedValue({}),
-        first: jest.fn().mockResolvedValue({ id: 1 }),
-    })),
-};
-
-// Mock the `c` object passed to the `handle` method
-const mockC = {
-    env: { DB: mockDb as unknown },
-};
-
-// Create an instance of CreateBundle
-const createBundle = new CreateBundle();
-const mockRequestBody = {
-    user_id: 1,
-    bundle_name: "Test Bundle",
-    bundle_desc: "A test bundle",
-    category_id: 2,
-    bundle_size: 2,
-    image_id: 3,
-    items: [
-        { id: 0, bundle_id: 0, item_name: "Item 1", image_id: 4 },
-        { id: 0, bundle_id: 0, item_name: "Item 2", image_id: 5 },
-    ],
-};
-jest.spyOn(createBundle, 'getValidatedData').mockResolvedValue({
-    body: mockRequestBody
-});
 
 describe('CreateBundle', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+  let createBundle: CreateBundle;
+  let mockDb;
+
+  beforeEach(() => {
+    // Create a mock of D1Database
+    mockDb = {
+      prepare: jest.fn(),
+    } as unknown;
+
+    createBundle = new CreateBundle(routeOptions); // Use imported routeOptions
+    jest.spyOn(createBundle, 'getValidatedData').mockResolvedValue({
+      body: {
+        user_id: 1,
+        bundle_name: 'Test Bundle',
+        bundle_desc: 'Test Description',
+        category_id: 2,
+        bundle_size: 1,
+        image_id: 123,
+        items: [{ item_name: 'item1', image_id: 456 }],
+      },
+    });
+  });
+
+  it('should successfully create a bundle and items', async () => {
+    // Create mock implementations for D1PreparedStatement
+    const mockStatement = {
+      bind: jest.fn().mockReturnThis(),
+      first: jest.fn().mockResolvedValue({ id: 1 }), // Ensure this returns the correct bundle ID
+      run: jest.fn().mockResolvedValue(undefined),
+      all: jest.fn(),
+      raw: jest.fn(),
+    };
+  
+    mockDb.prepare
+      .mockReturnValueOnce(mockStatement) // Insert bundle
+      .mockReturnValueOnce(mockStatement) // Retrieve bundle ID
+      .mockReturnValueOnce(mockStatement) // Insert item
+      .mockReturnValueOnce(mockStatement); // Retrieve item ID
+  
+    const mockContext = {
+      env: { DB: mockDb },
+    };
+  
+    const response = await createBundle.handle(mockContext as any);
+    const responseBody = (await response.json()) as ResponseData;
+  
+    expect(response.status).toBe(200);
+    expect(responseBody.success).toBe(true);
+    expect(responseBody.result.bundleId).toBe(1);
+    expect(responseBody.result.items).toEqual([{ item_name: 'item1', image_id: 456, id: 1, bundle_id: 1 }]);
+  });
+  
+
+  it('should return 400 if the items array length does not match bundle size', async () => {
+    jest.spyOn(createBundle, 'getValidatedData').mockResolvedValue({
+      body: {
+        user_id: 1,
+        bundle_name: 'Test Bundle',
+        bundle_desc: 'Test Description',
+        category_id: 2,
+        bundle_size: 2, // Bundle size doesn't match items length
+        image_id: 123,
+        items: [{ item_name: 'item1', image_id: 456 }],
+      },
     });
 
-    it('should create a bundle successfully', async () => {
-        const response = await createBundle.handle(mockC as any);
-        const data: SuccessResponse = await response.json();
-        
-        expect(response.status).toBe(200);
-        expect(data.success).toBe(true);
-        expect(data.result.bundleId).toBe(1);
-        expect(data.result.items).toHaveLength(2);
+    const mockContext = {
+      env: { DB: mockDb },
+    };
+
+    const response = await createBundle.handle(mockContext as any);
+
+    expect(response.status).toBe(400);
+    const responseBody = await response.json() as { success: boolean; result: string };
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.result).toBe("Items array length does not match bundle size.");
+  });
+
+  it('should return 500 on a database error', async () => {
+    const mockContext = {
+      env: { DB: mockDb },
+    };
+
+    // Mock database to throw an error
+    mockDb.prepare.mockImplementation(() => {
+      throw new Error('Database error');
     });
 
-    it('should return 400 if items array length does not match bundle size', async () => {
-        // Override mock data to have an incorrect length for items array
-        jest.spyOn(createBundle, 'getValidatedData').mockResolvedValueOnce({
-            body: {
-                user_id: 1,
-                bundle_name: "Test Bundle",
-                bundle_desc: "A test bundle",
-                category_id: 2,
-                bundle_size: 3, // Mismatch here
-                image_id: 3,
-                items: [
-                    { id: 0, bundle_id: 0, item_name: "Item 1", image_id: 4 },
-                ],
-            },
-        });
+    const response = await createBundle.handle(mockContext as any);
 
-        const response = await createBundle.handle(mockC as any);
-        const data: ErrorResponse = await response.json();
-        
-        expect(response.status).toBe(400);
-        expect(data.success).toBe(false);
-        expect(data.result).toBe("Items array length does not match bundle size.");
-    });
-
-    it('should handle database errors', async () => {
-        // Mock database to throw an error
-        (mockDb.prepare as jest.Mock).mockImplementationOnce(() => ({
-            bind: jest.fn().mockReturnThis(),
-            run: jest.fn().mockRejectedValue(new Error("Database error")),
-            first: jest.fn(),
-        }));
-
-        const response = await createBundle.handle(mockC as any);
-        const data: ErrorResponse = await response.json();
-        
-        expect(response.status).toBe(500);
-        expect(data.success).toBe(false);
-        expect(data.result).toContain("Database error");
-    });
+    expect(response.status).toBe(500);
+    const responseBody = await response.json() as { success: boolean; result: string };
+    expect(responseBody.success).toBe(false);
+    expect(responseBody.result).toContain("Database error: Error: Database error");
+  });
 });
